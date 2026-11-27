@@ -13,27 +13,118 @@ function registerSW() {
 registerSW();
 
 // 5 种「猫咪/狗」程序化纹理（无外部图集依赖，避免资源缺失）
+// 120x120 画布，圆角底版 + 动物本体；key 必须与 board.js 的 TYPE_KEYS 一致
+const INK = 0x2b1d14;
+
 const CATS = [
-  { key: 'orange', color: 0xe67e22 },
-  { key: 'tabby',  color: 0x8d6e63 },
-  { key: 'calico', color: 0xd16ba5 },
-  { key: 'puppy',  color: 0x7d5a3c },
-  { key: 'bigdog', color: 0xc0392b },
+  { key: 'orange', kind: 'cat',  body: 0xf6a24b, cream: 0xfdf0dc, earIn: 0xfbd9b4, stripe: null,      bg: 0xfdf1e1, edge: 0xe89a4e },
+  { key: 'tabby',  kind: 'cat',  body: 0xb08a64, cream: 0xefe0cc, earIn: 0xe6cdae, stripe: 0x7c5f42, bg: 0xf3eadb, edge: 0x9c7850 },
+  { key: 'calico', kind: 'cat',  body: 0xfdfbf6, cream: 0xffffff, earIn: 0xf3b9a6, stripe: null,      bg: 0xfbeee4, edge: 0xd8a37f, patch: [0xef9f45, 0x4e3b2c] },
+  { key: 'puppy',  kind: 'dog',  body: 0xe7c27a, cream: 0xfdf6e6, ear: 0xb98a4a,                     bg: 0xfbf2dd, edge: 0xcf9f54 },
+  { key: 'bigdog', kind: 'dog',  body: 0x8a6a4e, cream: 0xefe2ce, ear: 0x5e4632,                     bg: 0xf1e8da, edge: 0x6f5439 },
 ];
 
+function tileBase(g, o) {
+  g.fillStyle(o.bg, 1);
+  g.fillRoundedRect(2, 2, 116, 116, 24);
+  g.lineStyle(3.5, o.edge, 0.7);
+  g.strokeRoundedRect(2, 2, 116, 116, 24);
+}
+
+function face(g, eyeY = 54) {
+  g.fillStyle(INK, 1);
+  g.fillCircle(50, eyeY, 5);
+  g.fillCircle(70, eyeY, 5);
+  g.fillStyle(0xffffff, 0.95);
+  g.fillCircle(51.8, eyeY - 1.8, 1.9);
+  g.fillCircle(71.8, eyeY - 1.8, 1.9);
+  g.fillStyle(0xf2a0a0, 0.45); // 腮红
+  g.fillCircle(40, 64, 5.2);
+  g.fillCircle(80, 64, 5.2);
+}
+
+function drawCat(g, o) {
+  g.fillStyle(o.body, 1);
+  g.fillEllipse(60, 96, 58, 32);            // 身体
+  g.fillStyle(o.cream, 1);
+  g.fillEllipse(60, 99, 30, 18);            // 肚皮
+  g.fillStyle(o.body, 1);
+  g.fillEllipse(43, 107, 18, 10);           // 前爪
+  g.fillEllipse(77, 107, 18, 10);
+  g.fillStyle(o.body, 1);                   // 耳朵（压在头下）
+  g.fillTriangle(38, 42, 46, 12, 60, 34);
+  g.fillTriangle(82, 42, 74, 12, 60, 34);
+  g.fillStyle(o.earIn, 1);
+  g.fillTriangle(43, 37, 48, 20, 57, 33);
+  g.fillTriangle(77, 37, 72, 20, 63, 33);
+  g.fillStyle(o.body, 1);
+  g.fillCircle(60, 56, 25);                 // 头
+  if (o.patch) {                            // 三花斑块（压在头/身上，避开眼鼻）
+    g.fillStyle(o.patch[0], 1);
+    g.fillCircle(44, 35, 11);
+    g.fillEllipse(78, 94, 26, 18);
+    g.fillStyle(o.patch[1], 1);
+    g.fillEllipse(42, 96, 20, 14);
+    g.fillCircle(75, 33, 8);
+  }
+  if (o.stripe) {                          // 狸花纹
+    g.lineStyle(3, o.stripe, 0.85);
+    g.lineBetween(52, 33, 54, 44);
+    g.lineBetween(60, 31, 60, 44);
+    g.lineBetween(68, 33, 66, 44);
+  }
+  face(g);
+  g.fillStyle(0xd96a7f, 1);                 // 鼻
+  g.fillTriangle(56, 62, 64, 62, 60, 67);
+  g.lineStyle(2, INK, 0.55);                // 嘴
+  g.lineBetween(60, 67, 60, 71);
+  g.lineBetween(60, 71, 55, 74);
+  g.lineBetween(60, 71, 65, 74);
+  g.lineStyle(1.6, INK, 0.32);              // 胡须
+  g.lineBetween(40, 62, 25, 57);
+  g.lineBetween(40, 66, 25, 67);
+  g.lineBetween(80, 62, 95, 57);
+  g.lineBetween(80, 66, 95, 67);
+}
+
+function drawDog(g, o) {
+  g.fillStyle(o.ear, 1);                    // 垂耳
+  g.fillEllipse(32, 58, 21, 44);
+  g.fillEllipse(88, 58, 21, 44);
+  g.fillStyle(o.body, 1);
+  g.fillEllipse(60, 96, 58, 32);
+  g.fillStyle(o.cream, 1);
+  g.fillEllipse(60, 99, 30, 18);
+  g.fillStyle(o.body, 1);
+  g.fillEllipse(43, 107, 18, 10);
+  g.fillEllipse(77, 107, 18, 10);
+  g.fillStyle(o.body, 1);
+  g.fillCircle(60, 56, 25);                 // 头
+  g.fillStyle(o.cream, 1);
+  g.fillEllipse(60, 69, 27, 19);            // 口鼻
+  face(g, 52);
+  g.fillStyle(INK, 1);                      // 鼻
+  g.fillCircle(60, 63, 4.6);
+  g.fillStyle(0xffffff, 0.9);
+  g.fillCircle(61.6, 61.4, 1.5);
+  g.lineStyle(2, INK, 0.5);                 // 嘴
+  g.lineBetween(60, 68, 60, 72);
+  g.fillStyle(0xe87a8b, 1);                 // 舌头
+  g.fillEllipse(60, 75, 10, 7);
+}
+
 function makeTextures(scene) {
-  CATS.forEach(({ key, color }) => {
+  CATS.forEach((o) => {
     const g = scene.make.graphics({ x: 0, y: 0, add: false });
-    g.fillStyle(color, 1);
-    g.fillCircle(50, 64, 27);              // 身体
-    g.fillCircle(50, 34, 20);              // 头
-    g.fillTriangle(36, 20, 42, 9, 46, 24); // 左耳
-    g.fillTriangle(64, 20, 58, 9, 54, 24); // 右耳
-    g.fillStyle(0x2b1d14, 1);
-    g.fillCircle(44, 33, 3); g.fillCircle(56, 33, 3); // 眼
-    g.fillStyle(0xffffff, 0.9);
-    g.fillCircle(50, 58, 11);              // 肚皮
-    g.generateTexture('cat-' + key, 100, 100);
+    tileBase(g, o);
+    // 动物整体内缩到 84%，让棋子有留白、不顶格
+    g.save();
+    g.translateCanvas(60, 63);
+    g.scaleCanvas(0.82, 0.82);
+    g.translateCanvas(-60, -60);
+    if (o.kind === 'dog') drawDog(g, o); else drawCat(g, o);
+    g.restore();
+    g.generateTexture('cat-' + o.key, 120, 120);
     g.destroy();
   });
 }
