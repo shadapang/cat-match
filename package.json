@@ -1,0 +1,19 @@
+{
+  "name": "cat-match",
+  "private": true,
+  "version": "0.1.0",
+  "description": "小猫咪消消乐 H5（Vite + Phaser + PWA）",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 4173"
+  },
+  "dependencies": {
+    "phaser": "^3.80.1"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0",
+    "vite-plugin-pwa": "^0.20.0"
+  }
+}
