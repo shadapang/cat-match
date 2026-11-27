@@ -2,6 +2,10 @@
 // 与 Phaser 渲染解耦：scene 提供 add.image/add.text/tweens/time/input/scale
 const COLS = 8, ROWS = 8, N_TYPES = 5;
 export const TEXTURE_KEYS = ['orange', 'tabby', 'calico', 'puppy', 'bigdog'];
+// 棋子纹理原始边长（main.js generateTexture 用 120）。缩放必须除以它，
+// 否则 120 纹理按 /100 摆放 = 1.2 倍格子 → 相邻棋子重叠。
+const TILE_TEX = 120;
+const tileScale = (cell) => cell / TILE_TEX;
 
 export class Board {
   constructor(scene, cell, boardW, boardH) {
@@ -51,7 +55,7 @@ export class Board {
     for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
       const g = this.grid[r][c];
       g.sprite = s.add.image(boardX + c * cell + cell / 2, boardY + r * cell + cell / 2, 'cat-' + TEXTURE_KEYS[g.type])
-        .setDepth(1).setScale(cell / 100);
+        .setDepth(1).setScale(tileScale(cell));
     }
     this.bg = s.add.graphics().setDepth(0);
     this.drawBg();
@@ -74,7 +78,7 @@ export class Board {
     this.drawBg();
     for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
       const g = this.grid[r][c];
-      if (g.sprite) g.sprite.setPosition(this.boardX + c * cell + cell / 2, this.boardY + r * cell + cell / 2).setScale(cell / 100);
+      if (g.sprite) g.sprite.setPosition(this.boardX + c * cell + cell / 2, this.boardY + r * cell + cell / 2).setScale(tileScale(cell));
     }
   }
 
@@ -90,7 +94,7 @@ export class Board {
         this.selected = { r, c };
         const g = this.grid[r][c];
         g?.sprite?.setTint(0xfff3d6);
-        if (g?.sprite) s.tweens.add({ targets: g.sprite, scale: (cell / 100) * 1.15, duration: 90, yoyo: true,
+        if (g?.sprite) s.tweens.add({ targets: g.sprite, scale: tileScale(cell) * 1.12, duration: 90, yoyo: true,
           onComplete: () => g.sprite?.clearTint() });
         return;
       }
@@ -183,7 +187,7 @@ export class Board {
         const g = { type: t, r, c };
         this.grid[r][c] = g;
         g.sprite = s.add.image(this.boardX + c * cell + cell / 2, this.boardY + (r - need) * cell + cell / 2, 'cat-' + TEXTURE_KEYS[t])
-          .setDepth(1).setScale(cell / 100).setAlpha(0);
+          .setDepth(1).setScale(tileScale(cell)).setAlpha(0);
         s.tweens.add({ targets: g.sprite, x: this.boardX + c * cell + cell / 2,
           y: this.boardY + r * cell + cell / 2, alpha: 1, duration: 200, ease: 'Quad.easeOut', delay: i * 20 });
       }
