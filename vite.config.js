@@ -2,6 +2,8 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  // 部署到 GitHub Pages 子路径时由 CI 传 --base=/cat-match/；本地预览/开发走根
+  base: process.env.CAT_MATCH_BASE || '/',
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',
