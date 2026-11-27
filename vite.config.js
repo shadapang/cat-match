@@ -2,8 +2,8 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
-  // 部署到 GitHub Pages 子路径时由 CI 传 --base=/cat-match/；本地预览/开发走根
-  base: process.env.CAT_MATCH_BASE || '/',
+  // 用相对 base：同一份产物既能在本地根路径预览，也能放在 GitHub Pages 子路径 /cat-match/
+  base: process.env.CAT_MATCH_BASE || './',
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',
@@ -11,7 +11,8 @@ export default defineConfig({
         name: '小猫咪消消乐',
         short_name: '猫咪消消乐',
         description: 'Vite + Phaser 猫咪消消乐 H5 小游戏',
-        start_url: '/',
+        start_url: './',
+        scope: './',
         display: 'standalone',
         background_color: '#faf6ef',
         theme_color: '#faf6ef',
@@ -23,7 +24,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,png,json,ico,svg,woff2}'],
-        navigateFallback: '/index.html',
+        navigateFallback: 'index.html',
       },
       devOptions: { enabled: false },
     }),
